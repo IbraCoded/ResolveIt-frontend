@@ -38,6 +38,7 @@ function NewCaseContent() {
     opposite_party_phone: "",
     opposite_party_address: "",
     opposite_party_email: "",
+    opposite_party_user_id: "",
     is_in_court: false,
     case_or_fir_number: "",
     court_or_police_name: "",
@@ -56,66 +57,91 @@ function NewCaseContent() {
 
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const validateForm = () => {
+    const errors = {};
 
-    if (
-      !formData.type ||
-      !formData.description ||
-      !formData.opposite_party_name ||
-      !formData.opposite_party_phone ||
-      !formData.opposite_party_address
-    ) {
-      toast("Missing Required Fields", {
-        description: "Please fill in all required fields marked with *.",
-      });
-      return;
+    if (!formData.type) {
+      errors.case_type = "Case type is required";
     }
 
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(formData.opposite_party_phone)) {
-      toast("Invalid Phone Number", {
-        description: "Please enter a valid 10-digit phone number.",
-      });
-      return;
+    if (!formData.description.trim()) {
+      errors.description = "Case description is required";
     }
 
-    // validate email field if it shows
+    if (!formData.opposite_party_name.trim()) {
+      errors.opposite_party_name = "Opposite party name is required";
+    }
+
+    if (!formData.opposite_party_phone.trim()) {
+      errors.opposite_party_phone = "Phone number is required";
+    }
+    // else if (
+    //   /^[0-9]{10}$/.test(formData.opposite_party_phone.replace(/\s/g, ""))
+    // ) {
+    //   errors.opposite_party_phone = "Please enter a valid phone number";
+    // }
+
+    if (!formData.opposite_party_address.trim()) {
+      errors.opposite_party_address = "Address is required";
+    }
+
+    // Email validation only if field is shown and has value
     if (showEmailField && formData.opposite_party_email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.opposite_party_email)) {
-        toast("Please enter a valid email address");
-        return;
+        errors.opposite_party_email = "Please enter a valid email address";
       }
     }
 
     // Court-related validation
     if (formData.is_in_court) {
-      if (!formData.fir_case_number.trim()) {
-        toast("FIR/Case number is required when case is in court");
-        return;
+      if (!formData.case_or_fir_number.trim()) {
+        errors.case_or_fir_number =
+          "FIR/Case number is required when case is in court";
       }
-      if (!formData.court_police_station.trim()) {
-        toast("Court/Police station name is required when case is in court");
-        return;
+      if (!formData.court_or_police_name.trim()) {
+        errors.court_or_police_name =
+          "Court/Police station name is required when case is in court";
       }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      toast("Uh oh!", {
+        description: "Please fill the form correctly before submitting.",
+      });
+      return;
     }
 
     setIsLoading(true);
 
     try {
+      
+      console.log(selectedUser)
       const submissionData = {
         ...formData,
-        // Only include email if it's shown and has a value
-        opposite_party_email:
-          showEmailField && formData.opposite_party_email.trim()
-            ? formData.opposite_party_email.trim()
-            : null,
-        // Include selected user ID if available
-        opposite_party_user_id: selectedUser?.id || null,
-      };
+          opposite_party_user_id: selectedUser ? selectedUser.id : null,
+      }
 
-      await caseService.createCase(submissionData, proofFile);
+      // omit any property if it is empty
+      const cleanedSubmissionData = Object.fromEntries(
+        Object.entries(submissionData).filter(([key, value]) => {
+          const isEmpty =
+            value === null ||
+            value === undefined ||
+            (typeof value === "string" && value.trim() === "");
+
+          return !isEmpty;
+        })
+      );
+
+      await caseService.createCase(cleanedSubmissionData, proofFile);
 
       toast("Case registered successfully", {
         description: "Your case has been submitted and is now under review.",
@@ -193,7 +219,7 @@ function NewCaseContent() {
     setFormData((prev) => ({
       ...prev,
       opposite_party_phone: user.phone || "",
-      opposite_party_address: user.address || "",
+      opposite_party_address: user.street || "",
       opposite_party_email: "", // Clear email when user is selected
     }));
 
@@ -226,7 +252,8 @@ function NewCaseContent() {
   const searchUsers = async (query) => {
     try {
       setSearchError("");
-      const results = await usersService.searchUsers(query);``
+      const results = await usersService.searchUsers(query);
+      ``;
       return results;
     } catch (error) {
       setSearchError(
@@ -284,6 +311,12 @@ function NewCaseContent() {
                     <SelectItem value="criminal">Criminal</SelectItem>
                   </SelectContent>
                 </Select>
+                {validationErrors.type && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {validationErrors.type}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -297,6 +330,12 @@ function NewCaseContent() {
                   onChange={handleChange}
                   placeholder="Provide a detailed description of your dispute..."
                 />
+                {validationErrors.description && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {validationErrors.description}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -350,7 +389,7 @@ function NewCaseContent() {
                     id="opposite_party_phone"
                     name="opposite_party_phone"
                     type="tel"
-                    required
+                    // required
                     value={formData.opposite_party_phone}
                     onChange={handleChange}
                     placeholder="Enter phone number"
@@ -404,7 +443,7 @@ function NewCaseContent() {
                 <Textarea
                   id="opposite_party_address"
                   name="opposite_party_address"
-                  required
+                  // required
                   rows={2}
                   value={formData.opposite_party_address}
                   onChange={handleChange}
@@ -450,6 +489,11 @@ function NewCaseContent() {
                       value={formData.case_or_fir_number}
                       onChange={handleChange}
                       placeholder="Enter FIR or case number"
+                      className={
+                        validationErrors.case_or_fir_number
+                          ? "border-red-500"
+                          : ""
+                      }
                     />
                   </div>
 
@@ -463,7 +507,18 @@ function NewCaseContent() {
                       value={formData.court_or_police_name}
                       onChange={handleChange}
                       placeholder="Enter court or police station name"
+                      className={
+                        validationErrors.court_or_police_name
+                          ? "border-red-500"
+                          : ""
+                      }
                     />
+                    {validationErrors.court_or_police_name && (
+                      <p className="text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {validationErrors.court_or_police_name}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

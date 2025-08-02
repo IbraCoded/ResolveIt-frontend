@@ -63,7 +63,7 @@ function DashboardContent() {
       setFilteredCases(cases);
     } else {
       setFilteredCases(
-        cases.filter((case_) => case_.status.toLowerCase() === statusFilter)
+        cases.filter((case_) => case_.creator_status.toLowerCase() === statusFilter)
       );
     }
   };
@@ -154,7 +154,7 @@ function DashboardContent() {
           <CardContent>
             <div className="text-2xl font-bold">
               {cases.length > 0
-                ? cases.filter((c) => c.status.toLowerCase() === "pending")
+                ? cases.filter((c) => c.creator_status.toLowerCase() === "pending")
                     .length
                 : 0}
             </div>
@@ -182,7 +182,7 @@ function DashboardContent() {
           <CardContent>
             <div className="text-2xl font-bold">
               {cases.length > 0
-                ? cases.filter((c) => c.status.toLowerCase() === "resolved")
+                ? cases.filter((c) => c.creator_status.toLowerCase() === "resolved")
                     .length
                 : 0}
             </div>
@@ -235,8 +235,8 @@ function DashboardContent() {
                     </span>
                     {case_.type}
                   </CardTitle>
-                  <Badge className={getStatusColor(case_.status)}>
-                    {case_.status}
+                  <Badge className={getStatusColor(case_.creator_status)}>
+                    {case_.creator_status}
                   </Badge>
                 </div>
                 <CardDescription>

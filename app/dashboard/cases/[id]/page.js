@@ -173,11 +173,11 @@ function CaseDetailsContent({ params }) {
                 </CardTitle>
                 <Badge
                   className={`${getStatusColor(
-                    caseData.status
+                    caseData.creator_status
                   )} flex items-center gap-1`}
                 >
-                  {getStatusIcon(caseData.status)}
-                  {caseData.status}
+                  {getStatusIcon(caseData.creator_status)}
+                  {caseData.creator_status}
                 </Badge>
               </div>
             </CardHeader>
@@ -339,7 +339,7 @@ function CaseDetailsContent({ params }) {
                     </p>
                   </div>
                 </div>
-                {caseData.status.toLowerCase() !== "pending" && (
+                {caseData.creator_status.toLowerCase() !== "pending" && (
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2"></div>
                     <div>
@@ -350,7 +350,7 @@ function CaseDetailsContent({ params }) {
                     </div>
                   </div>
                 )}
-                {caseData.status.toLowerCase() === "resolved" && (
+                {caseData.creator_status.toLowerCase() === "resolved" && (
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
                     <div>
@@ -379,7 +379,7 @@ function CaseDetailsContent({ params }) {
                 <User className="w-4 h-4 mr-2" />
                 Contact Mediator
               </Button>
-              {caseData.status.toLowerCase() === "resolved" && (
+              {caseData.creator_status.toLowerCase() === "resolved" && (
                 <Button className="w-full">
                   <Download className="w-4 h-4 mr-2" />
                   Download Agreement
@@ -407,10 +407,10 @@ function CaseDetailsContent({ params }) {
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Status</span>
                 <Badge
-                  className={getStatusColor(caseData.status)}
+                  className={getStatusColor(caseData.creator_status)}
                   variant="secondary"
                 >
-                  {caseData.status}
+                  {caseData.creator_status}
                 </Badge>
               </div>
               <Separator />
