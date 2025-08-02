@@ -3,7 +3,7 @@ import { Navbar } from "@/components/navbar";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { Footer } from "@/components/footer";
-import { WebSocketProvider } from "@/components/websocker-provider";
+import { WebSocketProvider } from "@/components/websocket-provider";
 
 export const metadata = {
   title: "ResolveIt - Modern Mediation Platform",
