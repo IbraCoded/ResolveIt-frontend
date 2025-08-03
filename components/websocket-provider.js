@@ -24,14 +24,10 @@ export function WebSocketProvider({ children }) {
 
     socket.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
+        const data = event.data
         // show toast
         toast(`🔔 ${data.message}`);
-        addNotification({
-          type: data.type,
-          message: data.message,
-          title: data.title,
-        });
+        addNotification(data);
         console.log("📨 Message received:", data);
       } 
         catch (err) {

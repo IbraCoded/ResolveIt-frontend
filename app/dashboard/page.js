@@ -45,6 +45,15 @@ function DashboardContent() {
     filterCases();
   }, [cases, statusFilter]);
 
+  const getUserCaseStatus = (case_) => {
+    if (user?.id === case_.user_id) {
+      return case_.creator_status;
+    } else if (user?.id === case_.opposite_party_user_id) {
+      return case_.opposite_party_status;
+    }
+    return "unknown";
+  };
+
   const fetchCases = async () => {
     try {
       const userCases = await caseService.getUserCases();
@@ -63,7 +72,9 @@ function DashboardContent() {
       setFilteredCases(cases);
     } else {
       setFilteredCases(
-        cases.filter((case_) => case_.creator_status.toLowerCase() === statusFilter)
+        cases.filter(
+          (case_) => getUserCaseStatus(case_).toLowerCase() === statusFilter
+        )
       );
     }
   };
@@ -153,10 +164,11 @@ function DashboardContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {cases.length > 0
-                ? cases.filter((c) => c.creator_status.toLowerCase() === "pending")
-                    .length
-                : 0}
+              {
+                cases.filter(
+                  (c) => getUserCaseStatus(c).toLowerCase() === "pending"
+                ).length
+              }
             </div>
           </CardContent>
         </Card>
@@ -167,10 +179,11 @@ function DashboardContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {cases > 0
-                ? cases.filter((c) => c.status.toLowerCase() === "in progress")
-                    .length
-                : 0}
+              {
+                cases.filter(
+                  (c) => getUserCaseStatus(c).toLowerCase() === "in progress"
+                ).length
+              }
             </div>
           </CardContent>
         </Card>
@@ -181,10 +194,11 @@ function DashboardContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {cases.length > 0
-                ? cases.filter((c) => c.creator_status.toLowerCase() === "resolved")
-                    .length
-                : 0}
+              {
+                cases.filter(
+                  (c) => getUserCaseStatus(c).toLowerCase() === "pending"
+                ).length
+              }
             </div>
           </CardContent>
         </Card>
@@ -207,8 +221,7 @@ function DashboardContent() {
       </div>
 
       {/* Cases Grid */}
-      
-{      filteredCases.length === 0 ? (
+      {filteredCases.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>
             <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -235,8 +248,8 @@ function DashboardContent() {
                     </span>
                     {case_.type}
                   </CardTitle>
-                  <Badge className={getStatusColor(case_.creator_status)}>
-                    {case_.creator_status}
+                  <Badge className={getStatusColor(getUserCaseStatus(case_))}>
+                    {getUserCaseStatus(case_)}
                   </Badge>
                 </div>
                 <CardDescription>
