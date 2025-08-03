@@ -1,4 +1,5 @@
 "use client";
+import { title } from "process";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
@@ -24,10 +25,17 @@ export function WebSocketProvider({ children }) {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        toast(`🔔 ${data.message || data}`);
+        // show toast
+        toast(`🔔 ${data.message}`);
+        addNotification({
+          type: data.type,
+          message: data.message,
+          title: data.title,
+        });
         console.log("📨 Message received:", data);
-      } catch (err) {
-        console.error("❌ Failed to parse message:", event.data);
+      } 
+        catch (err) {
+          console.error("❌ Failed to parse message:", event.data);
       }
     };
 
