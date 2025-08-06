@@ -28,6 +28,9 @@ class AuthService {
       localStorage.setItem(this.tokenKey, data.access_token)
       localStorage.setItem(this.userKey, JSON.stringify(data.user))
 
+      // dispatch a custom event for token change
+      window.dispatchEvent(new CustomEvent("tokenChanged"))
+
       return data
     } catch (error) {
       throw error
