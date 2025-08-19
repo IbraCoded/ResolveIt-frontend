@@ -45,6 +45,8 @@ function DashboardContent() {
     filterCases();
   }, [cases, statusFilter]);
 
+  
+
   const getUserCaseStatus = (case_) => {
     if (user?.id === case_.user_id) {
       return case_.creator_status;
@@ -73,7 +75,7 @@ function DashboardContent() {
     } else {
       setFilteredCases(
         cases.filter(
-          (case_) => getUserCaseStatus(case_).toLowerCase() === statusFilter
+          (case_) => getUserCaseStatus(case_).toLowerCase() === statusFilter.toLowerCase()
         )
       );
     }
@@ -216,6 +218,7 @@ function DashboardContent() {
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="in progress">In Progress</SelectItem>
             <SelectItem value="resolved">Resolved</SelectItem>
+            <SelectItem value="requested">Requested</SelectItem>
           </SelectContent>
         </Select>
       </div>

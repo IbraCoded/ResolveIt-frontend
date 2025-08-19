@@ -17,6 +17,7 @@ import { caseService } from "@/services/cases";
 import { ProtectedRoute } from "@/components/protected-route";
 import { toast } from "sonner";
 import { formatDate, formatDateTime } from "@/lib/utils";
+import { authService } from "@/services/auth";
 import {
   ArrowLeft,
   Calendar,
@@ -34,6 +35,7 @@ import {
 function CaseDetailsContent({ params }) {
   const [caseData, setCaseData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [caseStatus, setCaseStatus] = useState("pending");
   const router = useRouter();
 
   const resolvedParams = React.use(params)
@@ -42,10 +44,24 @@ function CaseDetailsContent({ params }) {
     fetchCaseDetails();
   }, [resolvedParams.id]);
 
-  const fetchCaseDetails = async () => {
+  const currentUser = authService.getCurrentUser();
+
+const fetchCaseDetails = async () => {
     try {
       const case_ = await caseService.getCaseById(resolvedParams.id);
       setCaseData(case_);
+      
+      // Calculate status after we have the case data
+      let userStatus = "pending";
+      if (case_ && currentUser) {
+        if (case_.user_id === currentUser.user_id) {
+          userStatus = case_.creator_status;
+        } else if (case_.opposite_party_user_id === currentUser.id) {
+          userStatus = case_.opposite_party_status;
+        }
+      }
+      
+      setCaseStatus(userStatus);
     } catch (error) {
       toast("Error", {
         description: "Failed to fetch case details. Please try again.",
@@ -54,6 +70,19 @@ function CaseDetailsContent({ params }) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper function to get the correct status for the current user
+  const getCurrentUserStatus = () => {
+    if (!caseData || !currentUser) return "pending";
+    
+    if (caseData.creator_id === currentUser.user_id) {
+      return caseData.creator_status;
+    } else if (caseData.opposite_party_user_id === currentUser.user_id) {
+      return caseData.opposite_party_status;
+    }
+    
+    return "pending"; // fallback
   };
 
   const getStatusColor = (status) => {
@@ -173,11 +202,11 @@ function CaseDetailsContent({ params }) {
                 </CardTitle>
                 <Badge
                   className={`${getStatusColor(
-                    caseData.creator_status
+                    caseStatus
                   )} flex items-center gap-1`}
                 >
-                  {getStatusIcon(caseData.creator_status)}
-                  {caseData.creator_status}
+                  {getStatusIcon(caseStatus)}
+                  {caseStatus}
                 </Badge>
               </div>
             </CardHeader>
@@ -339,7 +368,7 @@ function CaseDetailsContent({ params }) {
                     </p>
                   </div>
                 </div>
-                {caseData.creator_status.toLowerCase() !== "pending" && (
+                {caseStatus.toLowerCase() !== "pending" && (
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2"></div>
                     <div>
@@ -350,7 +379,7 @@ function CaseDetailsContent({ params }) {
                     </div>
                   </div>
                 )}
-                {caseData.creator_status.toLowerCase() === "resolved" && (
+                {caseStatus.toLowerCase() === "resolved" && (
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
                     <div>
@@ -379,7 +408,7 @@ function CaseDetailsContent({ params }) {
                 <User className="w-4 h-4 mr-2" />
                 Contact Mediator
               </Button>
-              {caseData.creator_status.toLowerCase() === "resolved" && (
+              {caseStatus.toLowerCase() === "resolved" && (
                 <Button className="w-full">
                   <Download className="w-4 h-4 mr-2" />
                   Download Agreement
@@ -407,10 +436,10 @@ function CaseDetailsContent({ params }) {
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Status</span>
                 <Badge
-                  className={getStatusColor(caseData.creator_status)}
+                  className={getStatusColor(caseStatus)}
                   variant="secondary"
                 >
-                  {caseData.creator_status}
+                  {caseStatus}
                 </Badge>
               </div>
               <Separator />
