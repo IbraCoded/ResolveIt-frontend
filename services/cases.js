@@ -38,7 +38,7 @@ class CaseService {
 
   async getUserCases() {
     try {
-      const response = await fetch(`${API_BASE_URL}/cases/user`, {
+      const response = await fetch(`${API_BASE_URL}/cases/`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -120,6 +120,15 @@ class CaseService {
       throw error
     }
   }
+
+  async acceptCase(caseId) {
+    return this.updateCaseStatus(caseId, 'accepted') // or whatever your accepted status value is
+  }
+
+  async rejectCase(caseId) {
+    return this.updateCaseStatus(caseId, 'rejected') // or whatever your rejected status value is
+  }
+
 }
 
-export const caseService = new CaseService()
+export const caseService = new CaseService();

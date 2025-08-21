@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { caseService } from "@/services/cases";
 import { ProtectedRoute } from "@/components/protected-route";
 import { toast } from "sonner";
@@ -30,15 +31,23 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  Check,
+  Loader2,
+  UserCheck,
+  X,
 } from "lucide-react";
 
 function CaseDetailsContent({ params }) {
   const [caseData, setCaseData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [caseStatus, setCaseStatus] = useState("pending");
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [showAcceptButton, setShowAcceptButton] = useState(false);
+
   const router = useRouter();
 
-  const resolvedParams = React.use(params)
+  const resolvedParams = React.use(params);
 
   useEffect(() => {
     fetchCaseDetails();
@@ -46,21 +55,24 @@ function CaseDetailsContent({ params }) {
 
   const currentUser = authService.getCurrentUser();
 
-const fetchCaseDetails = async () => {
+  const fetchCaseDetails = async () => {
     try {
       const case_ = await caseService.getCaseById(resolvedParams.id);
       setCaseData(case_);
-      
+
       // Calculate status after we have the case data
       let userStatus = "pending";
       if (case_ && currentUser) {
-        if (case_.user_id === currentUser.user_id) {
+        if (case_.user_id === currentUser.id) {
           userStatus = case_.creator_status;
         } else if (case_.opposite_party_user_id === currentUser.id) {
           userStatus = case_.opposite_party_status;
+          if (case_.opposite_party_status === "requested") {
+            setShowAcceptButton(true);
+          }
         }
       }
-      
+
       setCaseStatus(userStatus);
     } catch (error) {
       toast("Error", {
@@ -72,18 +84,34 @@ const fetchCaseDetails = async () => {
     }
   };
 
-  // Helper function to get the correct status for the current user
-  const getCurrentUserStatus = () => {
-    if (!caseData || !currentUser) return "pending";
-    
-    if (caseData.creator_id === currentUser.user_id) {
-      return caseData.creator_status;
-    } else if (caseData.opposite_party_user_id === currentUser.user_id) {
-      return caseData.opposite_party_status;
-    }
-    
-    return "pending"; // fallback
-  };
+const handleCaseResponse = async (action) => {
+  if (!caseData || !currentUser) return;
+
+  const setLoading = action === 'accept' ? setIsAccepting : setIsRejecting;
+  setLoading(true);
+
+  try {
+    const updatedCase = action === 'accept' 
+      ? await caseService.acceptCase(caseData.id)
+      : await caseService.rejectCase(caseData.id);
+
+    setCaseData(updatedCase);
+    setShowAcceptButton(false);
+
+    toast({
+      title: `Case ${action === 'accept' ? 'Accepted' : 'Rejected'}`,
+      description: `You have ${action === 'accept' ? 'accepted' : 'declined'} this mediation case. The case initiator will be notified.`,
+    });
+  } catch (error) {
+    toast({
+      title: `Failed to ${action === 'accept' ? 'Accept' : 'Reject'} Case`,
+      description: error.message || "Something went wrong. Please try again.",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -123,6 +151,22 @@ const fetchCaseDetails = async () => {
         return "📋";
     }
   };
+
+  // check if the current user is the opposite party and if their status is "requested"
+  // const shouldShowAcceptButton = async () => {
+  //   if (!caseData || !currentUser) {
+  //     setHasResponded;
+  //     return;
+  //   }
+
+  //   const isOppositeParty = caseData.opposite_party_user_id === currentUser.id;
+  //   const isRequestedStatus =
+  //     caseData.opposite_party_status?.toLowerCase() === "requested";
+
+  //   return isOppositeParty && isRequestedStatus;
+  // };
+
+  // shouldShowAcceptButton();
 
   if (isLoading) {
     return (
@@ -181,6 +225,53 @@ const fetchCaseDetails = async () => {
           <p className="text-muted-foreground">Case #{caseData.id}</p>
         </div>
       </div>
+      {/* Accept Case Alert for Opposite Party */}
+      {showAcceptButton && (
+        <Alert className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+          <UserCheck className="h-4 w-4 text-blue-600 mt-2" />
+          <AlertDescription className="text-blue-800 dark:text-blue-200">
+            <div className="flex items-center justify-between">
+              <span>
+                You have been invited to participate in this mediation case.
+              </span>
+              <Button
+                onClick={handleCaseResponse.bind(null, 'accept')}
+                disabled={isAccepting || isRejecting}
+                className="ml-4 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {isRejecting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Accepting...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Accept Case
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleCaseResponse.bind(null, 'reject')}
+                disabled={isAccepting || isRejecting}
+                className="ml-4 bg-red-600 hover:bg-blue-700 text-white"
+              >
+                {isRejecting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Rejecting...
+                  </>
+                ) : (
+                  <>
+                    <X className="w-4 h-4 mr-2" />
+                    Reject Case
+                  </>
+                )}
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content */}
