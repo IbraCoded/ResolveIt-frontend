@@ -84,34 +84,34 @@ function CaseDetailsContent({ params }) {
     }
   };
 
-const handleCaseResponse = async (action) => {
-  if (!caseData || !currentUser) return;
+  const handleCaseResponse = async (action) => {
+    if (!caseData || !currentUser) return;
 
-  const setLoading = action === 'accept' ? setIsAccepting : setIsRejecting;
-  setLoading(true);
+    const setLoading = action === "accept" ? setIsAccepting : setIsRejecting;
+    setLoading(true);
 
-  try {
-    const updatedCase = action === 'accept' 
-      ? await caseService.acceptCase(caseData.id)
-      : await caseService.rejectCase(caseData.id);
+    try {
+      const updatedCase =
+        action === "accept"
+          ? await caseService.acceptCase(caseData.id)
+          : await caseService.rejectCase(caseData.id);
 
-    setCaseData(updatedCase);
-    setShowAcceptButton(false);
+      setCaseData(updatedCase);
+      setShowAcceptButton(false);
 
-    toast({
-      title: `Case ${action === 'accept' ? 'Accepted' : 'Rejected'}`,
-      description: `You have ${action === 'accept' ? 'accepted' : 'declined'} this mediation case. The case initiator will be notified.`,
-    });
-  } catch (error) {
-    toast({
-      title: `Failed to ${action === 'accept' ? 'Accept' : 'Reject'} Case`,
-      description: error.message || "Something went wrong. Please try again.",
-      variant: "destructive",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+      toast(`Case ${action === "accept" ? "Accepted" : "Rejected"}`, {
+        description: `You have ${
+          action === "accept" ? "accepted" : "declined"
+        } this mediation case. The case initiator will be notified.`,
+      });
+    } catch (error) {
+      toast(`Failed to ${action === "accept" ? "Accept" : "Reject"} Case`, {
+        description: error.message || "Something went wrong. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -235,7 +235,7 @@ const handleCaseResponse = async (action) => {
                 You have been invited to participate in this mediation case.
               </span>
               <Button
-                onClick={handleCaseResponse.bind(null, 'accept')}
+                onClick={handleCaseResponse.bind(null, "accept")}
                 disabled={isAccepting || isRejecting}
                 className="ml-4 bg-blue-600 hover:bg-blue-700 text-white"
               >
@@ -252,7 +252,7 @@ const handleCaseResponse = async (action) => {
                 )}
               </Button>
               <Button
-                onClick={handleCaseResponse.bind(null, 'reject')}
+                onClick={handleCaseResponse.bind(null, "reject")}
                 disabled={isAccepting || isRejecting}
                 className="ml-4 bg-red-600 hover:bg-blue-700 text-white"
               >
